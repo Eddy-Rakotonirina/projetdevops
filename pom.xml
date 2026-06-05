@@ -1,0 +1,28 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+
+  <!-- Version du format pom -->
+  <modelVersion>4.0.0</modelVersion>
+
+  <!-- Identité du projet -->
+  <groupId>com.monapp</groupId>
+  <artifactId>monapp</artifactId>
+  <version>1.0.0</version>
+  <packaging>jar</packaging>
+
+  <!-- Version Java -->
+  <properties>
+    <maven.compiler.source>8</maven.compiler.source>
+    <maven.compiler.target>8</maven.compiler.target>
+  </properties>
+
+  <!-- Bibliothèque de test JUnit -->
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.13</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+</project>
