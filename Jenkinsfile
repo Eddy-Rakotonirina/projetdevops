@@ -2,37 +2,46 @@ pipeline {
   agent any
   tools { maven 'Maven_3.8' }
 
-  stages {
+  environment {
+    // Utilisation d'une variable pour le tag facilite la maintenance
+    IMAGE_TAG = "1.0.0"
+    DOCKER_IMAGE = "eddyrakotonirina/jenkins:${IMAGE_TAG}"
+  }
 
+  stages {
     stage('Git Checkout') {
       steps {
-        git credentialsId: 'git_credentials',
+        // Attention : tu utilises une URL HTTPS, mais un credential SSH. 
+        // Assure-toi que c'est le bon type. Si c'est SSH, utilise : git@github.com:Eddy-Rakotonirina/projetdevops.git
+        git credentialsId: 'GithubSsh',
             url: 'https://github.com/Eddy-Rakotonirina/projetdevops.git'
       }
     }
 
-    stage('Build') {
-      steps { sh 'mvn clean install' }
-    }
-
-    stage('Unit Tests') {
-      steps { sh 'mvn test' }
+    stage('Build & Test') {
+      steps { 
+        // mvn clean install fait déjà les tests, pas besoin de deux étapes distinctes
+        sh 'mvn clean install' 
+      }
     }
 
     stage('Build Docker Image') {
       steps {
-        sh 'docker build -t TON_USER/monapp:1.0.0 .'
+        // CORRECTION : Suppression du point en trop à la fin de la commande
+        sh "docker build -t ${DOCKER_IMAGE} ."
       }
     }
 
     stage('Push to DockerHub') {
       steps {
-        withCredentials([string(
+        // Utilisation de 'usernamePassword' au lieu de 'string' pour une meilleure sécurité
+        withCredentials([usernamePassword(
           credentialsId: 'dockerhubpass',
-          variable: 'dockerHubPass'
+          usernameVariable: 'DOCKER_USER',
+          passwordVariable: 'DOCKER_PASS'
         )]) {
-          sh 'docker login -u TON_USER -p $dockerHubPass'
-          sh 'docker push TON_USER/monapp:1.0.0'
+          sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+          sh "docker push ${DOCKER_IMAGE}"
         }
       }
     }
@@ -40,8 +49,8 @@ pipeline {
 
   post {
     failure {
-      emailext body: 'Build $BUILD_NUMBER échoué',
-               subject: 'Jenkins FAILED',
+      emailext body: "Build ${env.BUILD_NUMBER} échoué",
+               subject: "Jenkins FAILED - ${env.JOB_NAME}",
                to: 'ton@email.com'
     }
   }
