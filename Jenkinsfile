@@ -1,6 +1,6 @@
 pipeline {
   agent any
-  tools { maven 'Maven_3.8' }
+  tools { maven 'my_maven' }
 
   environment {
     // Utilisation d'une variable pour le tag facilite la maintenance
