@@ -1,5 +1,5 @@
 # Image Java de base (légère)
-FROM openjdk:8-jdk-alpine
+FROM eclipse-temurin:8-jdk-alpine
 
 # Dossier de travail dans le conteneur
 WORKDIR /app
