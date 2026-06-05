@@ -1,43 +1,59 @@
 pipeline {
   agent any
-  tools { maven 'my_maven' }
+  
+  tools { 
+    // Configuration de l'outil Maven selon l'étape 2 du TP (on utilise 'my_maven' qui est configuré chez toi)
+    maven 'my_maven' 
+  }
 
   environment {
-    // Utilisation d'une variable pour le tag facilite la maintenance
-    IMAGE_TAG = "1.0.0"
-    DOCKER_IMAGE = "eddyrakotonirina/jenkins:${IMAGE_TAG}"
+    // Variables pour l'image Docker (Adapte avec ton nom d'utilisateur Docker Hub si nécessaire)
+    DOCKER_USER = 'eddyrakotonirina'
+    IMAGE_NAME = 'jenkins'
+    IMAGE_TAG = '1.0.0'
+    DOCKER_IMAGE = "${DOCKER_USER}/${IMAGE_NAME}:${IMAGE_TAG}"
   }
 
   stages {
-    stage('Git Checkout') {
+    // ÉTAPES 1 & 2 : Le "Git Checkout" et la "Compilation" (mvn clean compile)
+    // Note : Jenkins fait déjà un checkout automatique au début, mais si ton prof exige le stage visuel :
+    stage('git checkout') {
       steps {
-        // Correction de l'URL pour correspondre aux credentials SSH
-        git credentialsId: 'GithubSsh',
-            url: 'git@github.com:Eddy-Rakotonirina/projetdevops.git'
+        // Utilisation de l'URL HTTPS et des identifiants recommandés par le sujet
+        git credentialsId: 'loginGithub', 
+            url: 'https://github.com/Eddy-Rakotonirina/projetdevops.git'
       }
     }
 
-    stage('Build & Test') {
+    stage('Build the application') {
       steps { 
-        // mvn clean install fait déjà les tests
-        sh 'mvn clean install' 
+        // Compilation seule de l'application avec Maven (Étape 2 du TP)
+        sh 'mvn clean compile' 
       }
     }
 
-    stage('Build Docker Image') {
+    // ÉTAPE 3 : Exécution des tests unitaires
+    stage('Unit Test Execution') {
       steps {
-        sh "docker build -t ${DOCKER_IMAGE} ."
+        // Commande demandée à la section 3 du TP
+        sh 'mvn test'
       }
     }
 
+    // ÉTAPE 4 : Build de l'image docker
+    stage('Build the docker image') {
+      steps {
+        // Commande de build demandée à la section 4 du TP
+        sh "docker build --tag ${DOCKER_IMAGE} ."
+      }
+    }
+
+    // ÉTAPE 5 : Mettre l'image dans le dépôt DockerHub
     stage('Push to DockerHub') {
       steps {
-        withCredentials([usernamePassword(
-          credentialsId: 'dockerhubpass',
-          usernameVariable: 'DOCKER_USER',
-          passwordVariable: 'DOCKER_PASS'
-        )]) {
-          sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+        // Utilisation de la fonction withCredentials demandée à la section 5 du TP
+        withCredentials([string(credentialsId: 'loginDockerhub', variable: 'loginDockerhub')]) {
+          sh "docker login -u ${DOCKER_USER} -p \$loginDockerhub"
           sh "docker push ${DOCKER_IMAGE}"
         }
       }
