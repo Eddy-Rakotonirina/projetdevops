@@ -39,7 +39,7 @@ pipeline {
     }
 
     // ÉTAPE 4 : Build de l'image Docker
-    stage('Build the docker image') {
+    stage('Build les docker image') {
       steps {
         sh "docker build --tag ${DOCKER_IMAGE} ."
       }
